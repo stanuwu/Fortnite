@@ -55,8 +55,6 @@ namespace Fortnite.Game
         {
             if (!EnsureProcess()) DisposeProcess();
             if (!EnsureWindow()) DisposeWindow();
-
-            EnsureWindow();
         }
 
         private bool EnsureProcess()

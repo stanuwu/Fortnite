@@ -1,13 +1,9 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System.Drawing;
+using System.Windows;
 using System.Windows.Threading;
 using Fortnite.Game;
-using Fortnite.Sys;
-using Fortnite.Sys.Structs;
 using Fortnite.Utils;
-using Application = System.Windows.Application;
-using Point = System.Drawing.Point;
+using GameOverlay.Windows;
 
 namespace Fortnite.Render
 {
@@ -19,63 +15,32 @@ namespace Fortnite.Render
         {
             GameProcess = gameProcess;
 
-            Window = new Form
+            Window = new OverlayWindow
             {
-                Name = "Overlay Window",
-                Text = "Overlay Window",
-                MinimizeBox = false,
-                MaximizeBox = false,
-                FormBorderStyle = FormBorderStyle.None,
-                TopMost = true,
+                Title = "Fortnite Overlay",
+                IsTopmost = true,
+                IsVisible = true,
+                X = -32000,
+                Y = -32000,
                 Width = 16,
-                Height = 16,
-                Left = -32000,
-                Top = -32000,
-                StartPosition = FormStartPosition.Manual
+                Height = 16
             };
 
-            Window.Load += (sender, args) =>
-            {
-                var exStyle = User32.GetWindowLong(Window.Handle, User32.GWL_EXSTYLE);
-                exStyle |= User32.WS_EX_LAYERED;
-                exStyle |= User32.WS_EX_TRANSPARENT;
-
-                User32.SetWindowLong(Window.Handle, User32.GWL_EXSTYLE, (IntPtr)exStyle);
-
-                User32.SetLayeredWindowAttributes(Window.Handle, 0, 255, User32.LWA_ALPHA);
-            };
-            Window.SizeChanged += (sender, args) => ExtendFrameIntoClientArea();
-            Window.LocationChanged += (sender, args) => ExtendFrameIntoClientArea();
-            Window.Closed += (sender, args) => Application.Current.Shutdown();
-
-            Window.Show();
+            Window.Create();
         }
 
         private GameProcess GameProcess { get; set; }
 
-        public Form Window { get; private set; }
+        public OverlayWindow Window { get; private set; }
 
         public override void Dispose()
         {
             base.Dispose();
 
-            Window.Close();
             Window.Dispose();
             Window = default;
 
             GameProcess = default;
-        }
-
-        private void ExtendFrameIntoClientArea()
-        {
-            var margins = new Margins
-            {
-                Left = -1,
-                Right = -1,
-                Top = -1,
-                Bottom = -1
-            };
-            Dwmapi.DwmExtendFrameIntoClientArea(Window.Handle, ref margins);
         }
 
         protected override void Tick()
@@ -83,20 +48,27 @@ namespace Fortnite.Render
             Update(GameProcess.WindowRectangle);
         }
 
-        private void Update(Rectangle windowRectangleClient)
+        private void Update(Rectangle windowRectangle)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                if (Window.Location == windowRectangleClient.Location && Window.Size == windowRectangleClient.Size) return;
-                if (windowRectangleClient.Width > 0 && windowRectangleClient.Height > 0)
+                if (Window.X != windowRectangle.Location.X || Window.Y != windowRectangle.Location.Y ||
+                    Window.Width != windowRectangle.Size.Width || Window.Height != windowRectangle.Size.Height)
                 {
-                    Window.Location = windowRectangleClient.Location;
-                    Window.Size = windowRectangleClient.Size;
-                }
-                else
-                {
-                    Window.Location = new Point(-32000, -32000);
-                    Window.Size = new Size(16, 16);
+                    if (windowRectangle.Width > 0 && windowRectangle.Height > 0)
+                    {
+                        Window.X = windowRectangle.Location.X;
+                        Window.Y = windowRectangle.Location.Y;
+                        Window.Width = windowRectangle.Size.Width;
+                        Window.Height = windowRectangle.Size.Height;
+                    }
+                    else
+                    {
+                        Window.X = -32000;
+                        Window.Y = -32000;
+                        Window.Width = 16;
+                        Window.Height = 16;
+                    }
                 }
             }, DispatcherPriority.Normal);
         }

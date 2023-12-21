@@ -72,7 +72,7 @@ namespace Fortnite.Render
                 EnableAutoDepthStencil = true,
                 AutoDepthStencilFormat = Format.D16,
                 PresentationInterval = PresentInterval.Immediate,
-                MultiSampleType = MultisampleType.FourSamples
+                MultiSampleType = MultisampleType.TwoSamples
             };
 
             Device = new Device(new Direct3D(), 0, DeviceType.Hardware, WindowOverlay.Window.Handle, CreateFlags.HardwareVertexProcessing, parameters);
@@ -141,7 +141,7 @@ namespace Fortnite.Render
                 Device.EndScene();
 
                 Device.Present();
-            }, DispatcherPriority.Normal);
+            }, DispatcherPriority.Render);
         }
 
         private void Render()
